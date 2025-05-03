@@ -184,8 +184,6 @@ import { exec } from "child_process";
 
 // Option Menu
 async function mainMenu() {
-  printGreeting();
-
   const { action } = await prompts({
     type: "select",
     name: "action",
