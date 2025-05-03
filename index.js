@@ -15,7 +15,7 @@ import { exec } from "child_process";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Format changes with color
+// Format changes with magenta as main color
 function formatDiff(oldContent, newContent) {
   let diffOutput = "";
   const oldLines = oldContent.split("\n");
@@ -26,16 +26,16 @@ function formatDiff(oldContent, newContent) {
 
   while (i < oldLines.length || j < newLines.length) {
     if (i < oldLines.length && j < newLines.length && oldLines[i] === newLines[j]) {
-      diffOutput += chalk.gray("  " + oldLines[i]) + "\n"; // unchanged line dimmed
+      diffOutput += chalk.gray("  " + oldLines[i]) + "\n";
       i++;
       j++;
     } else {
       if (i < oldLines.length) {
-        diffOutput += chalk.red("- " + oldLines[i]) + "\n"; // deleted line
+        diffOutput += chalk.hex("#FFA500")("- " + oldLines[i]) + "\n"; // magenta for deletion
         i++;
       }
       if (j < newLines.length) {
-        diffOutput += chalk.blue("+ " + newLines[j]) + "\n"; // added line
+        diffOutput += chalk.hex("#FFD580")("+ " + newLines[j]) + "\n"; // lighter magenta for addition
         j++;
       }
     }
@@ -43,12 +43,10 @@ function formatDiff(oldContent, newContent) {
   return diffOutput;
 }
 
-// CLI Greeting
+// CLI Greeting with magenta theme
 function printGreeting() {
-  const asciiArt = figlet.textSync("Terraform Refactor", {
+  const asciiArt = figlet.textSync("Terraform Assistant", {
     font: "Standard",
-    horizontalLayout: "default",
-    verticalLayout: "default",
   });
 
   const username = os.userInfo().username;
@@ -61,36 +59,35 @@ function printGreeting() {
 
   const greetingBox = boxen(
     [
-      chalk.blue(asciiArt),
-      chalk.bold.green(`${username}@${hostname}`),
+      chalk.hex("#FFA500")(asciiArt),
+      chalk.white.bold(`${username}@${hostname}`),
       "",
-      chalk.bold("📅 Date:") + " " + chalk.cyan(now.toLocaleString("en-GB", { timeZoneName: "short" })),
-      chalk.bold("⏱️ Uptime:") + ` ${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
-      chalk.bold("💾 RAM:") + ` ${chalk.yellow(memUsed.toFixed(0))}MB used / ${chalk.yellow(memTotal.toFixed(0))}MB total`,
-      chalk.bold("📁 Current Working Directory: ") + chalk.cyan(process.cwd()),
+      chalk.hex("#FFA500")("Date: ") + chalk.white(now.toLocaleString("en-GB", { timeZoneName: "short" })) + " ",
+      chalk.hex("#FFA500")("Optime: ") + `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` + " ",
+      chalk.hex("#FFA500")("RAM: ") + `${memUsed.toFixed(0)}MB used / ${memTotal.toFixed(0)}MB total` + " ",
+      chalk.hex("#FFA500")("Working Directory: ") + chalk.white(process.cwd()) + " ",
       "",
-      chalk.yellow("Terraform Refactor Tool will help you improve code readability and performance!"),
+      chalk.white("Terraform Assistant helps improve readability, performance & security!"),
     ].join("\n"),
     {
       padding: 1,
       margin: 1,
       borderStyle: "round",
-      borderColor: "green",
+      borderColor: "magenta",
     }
   );
 
   console.log(greetingBox);
 }
 
-// Refactor logic
 async function analyzeAndRefactor(dir) {
-  console.log(`🔍 Analyzing Terraform files in directory: ${dir}`);
+  console.log(chalk.hex("#FFA500")(`🔍 Analyzing Terraform files in directory: ${dir}`));
   const spinner = ora("Loading files...").start();
   const files = await readTfFiles(dir);
   spinner.succeed("Files loaded successfully");
 
   if (files.length === 0) {
-    console.log(chalk.red("No Terraform files found in the directory!"));
+    console.log(chalk.hex("#FFA500")("⚠️  No Terraform files found in the directory!"));
     return;
   }
 
@@ -98,7 +95,7 @@ async function analyzeAndRefactor(dir) {
   let changes = [];
 
   for (let file of files) {
-    console.log(chalk.green(`\nRefactoring file: ${file.path}`));
+    console.log(chalk.white.bold(`\n✨ Refactoring file: ${file.path}`));
     const fileSpinner = ora(`Refactoring ${file.path}`).start();
     const suggestion = await refactorFile(file, prompt);
     fileSpinner.succeed(`Refactor completed for ${file.path}`);
@@ -110,7 +107,7 @@ async function analyzeAndRefactor(dir) {
       padding: 1,
       margin: 1,
       borderStyle: "double",
-      borderColor: "cyan",
+      borderColor: "magenta",
       title: `Proposed changes in ${path.basename(file.path)}`,
       titleAlignment: "center",
     });
@@ -120,7 +117,7 @@ async function analyzeAndRefactor(dir) {
     const confirm = await prompts({
       type: "select",
       name: "apply",
-      message: chalk.yellowBright("Do you want to apply these changes?"),
+      message: chalk.hex("#FFA500")("Do you want to apply these changes?"),
       choices: [
         { title: chalk.green("✔ Yes, apply"), value: true },
         { title: chalk.red("✖ No, skip"), value: false },
@@ -156,7 +153,6 @@ async function analyzeAndRefactor(dir) {
   }
 }
 
-// Folder structure generation
 async function generateFolderStructure(dir) {
   const structure = [
     "modules/",
@@ -179,24 +175,22 @@ async function generateFolderStructure(dir) {
     }
   }
 
-  console.log(chalk.green("✅ Best practice folder structure generated."));
+  console.log(chalk.hex("#FFA500")("✅ Folder structure generated."));
 }
 
-// Security scan
 async function checkSecurity(dir) {
-  const spinner = ora("Checking Terraform code for security issues...").start();
+  const spinner = ora("Running tfsec security checks...").start();
   exec(`tfsec ${dir}`, (err, stdout, stderr) => {
     spinner.stop();
     if (err) {
       console.error(chalk.red("❌ Security scan failed:"), stderr);
     } else {
-      console.log(chalk.blue("🔍 Security report:\n"));
+      console.log(chalk.hex("#FFA500")("🔒 Security report:\n"));
       console.log(stdout);
     }
   });
 }
 
-// Deploy
 async function deployTerraform(dir) {
   const commands = [
     "terraform fmt",
@@ -207,7 +201,7 @@ async function deployTerraform(dir) {
   ];
 
   for (const cmd of commands) {
-    console.log(chalk.cyan(`\n▶ ${cmd}`));
+    console.log(chalk.hex("#FFA500")(`\n▶ ${cmd}`));
     await new Promise((resolve) => {
       const proc = exec(cmd, { cwd: dir }, (err, stdout, stderr) => {
         if (stdout) console.log(chalk.white(stdout));
@@ -221,18 +215,17 @@ async function deployTerraform(dir) {
   }
 }
 
-// Main Menu
 async function mainMenu() {
-  printGreeting(); // moved greeting here
+  printGreeting();
   const { action } = await prompts({
     type: "select",
     name: "action",
-    message: "🛠️ What do you want to do?",
+    message: chalk.hex("#FFA500")("What do you want to do?"),
     choices: [
-      { title: "🗂️ Generate Terraform Folder Structure", value: "generateStructure" },
-      { title: "✨ Optimize Terraform Source Code", value: "optimize" },
-      { title: "🔒 Check for Security Issues", value: "security" },
-      { title: "🚀 Deploy Terraform Resources", value: "deploy" },
+      { title: chalk.white("✨ Generate Terraform Folder Structure"), value: "generateStructure" },
+      { title: chalk.white("✨ Optimize Terraform Source Code"), value: "optimize" },
+      { title: chalk.white("✨ Check for Security Issues"), value: "security" },
+      { title: chalk.white("✨ Deploy Terraform Resources"), value: "deploy" },
     ],
   });
 
@@ -241,7 +234,7 @@ async function mainMenu() {
   const { dir } = await prompts({
     type: "text",
     name: "dir",
-    message: "📁 Enter path to Terraform folder:",
+    message: chalk.hex("#FFA500")("📁 Enter path to Terraform folder:"),
     initial: "./",
   });
 
