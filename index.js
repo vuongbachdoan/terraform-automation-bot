@@ -10,11 +10,12 @@ import { dirname } from "path";
 import figlet from "figlet";
 import boxen from "boxen";
 import os from "os";
+import { exec } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Utility to format changes with color
+// Format changes with color
 function formatDiff(oldContent, newContent) {
   let diffOutput = "";
   const oldLines = oldContent.split("\n");
@@ -24,11 +25,7 @@ function formatDiff(oldContent, newContent) {
   let j = 0;
 
   while (i < oldLines.length || j < newLines.length) {
-    if (
-      i < oldLines.length &&
-      j < newLines.length &&
-      oldLines[i] === newLines[j]
-    ) {
+    if (i < oldLines.length && j < newLines.length && oldLines[i] === newLines[j]) {
       diffOutput += chalk.gray("  " + oldLines[i]) + "\n"; // unchanged line dimmed
       i++;
       j++;
@@ -46,7 +43,7 @@ function formatDiff(oldContent, newContent) {
   return diffOutput;
 }
 
-// CLI Greeting with stylized UI
+// CLI Greeting
 function printGreeting() {
   const asciiArt = figlet.textSync("Terraform Refactor", {
     font: "Standard",
@@ -67,20 +64,12 @@ function printGreeting() {
       chalk.blue(asciiArt),
       chalk.bold.green(`${username}@${hostname}`),
       "",
-      chalk.bold("📅 Date:") +
-        " " +
-        chalk.cyan(now.toLocaleString("en-GB", { timeZoneName: "short" })),
-      chalk.bold("⏱️ Uptime:") +
-        ` ${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
-      chalk.bold("💾 RAM:") +
-        ` ${chalk.yellow(memUsed.toFixed(0))}MB used / ${chalk.yellow(
-          memTotal.toFixed(0)
-        )}MB total`,
+      chalk.bold("📅 Date:") + " " + chalk.cyan(now.toLocaleString("en-GB", { timeZoneName: "short" })),
+      chalk.bold("⏱️ Uptime:") + ` ${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
+      chalk.bold("💾 RAM:") + ` ${chalk.yellow(memUsed.toFixed(0))}MB used / ${chalk.yellow(memTotal.toFixed(0))}MB total`,
       chalk.bold("📁 Current Working Directory: ") + chalk.cyan(process.cwd()),
       "",
-      chalk.yellow(
-        "Terraform Refactor Tool will help you improve code readability and performance!"
-      ),
+      chalk.yellow("Terraform Refactor Tool will help you improve code readability and performance!"),
     ].join("\n"),
     {
       padding: 1,
@@ -93,11 +82,10 @@ function printGreeting() {
   console.log(greetingBox);
 }
 
-// Refactor the files and ask for confirmation
+// Refactor logic
 async function analyzeAndRefactor(dir) {
   console.log(`🔍 Analyzing Terraform files in directory: ${dir}`);
   const spinner = ora("Loading files...").start();
-
   const files = await readTfFiles(dir);
   spinner.succeed("Files loaded successfully");
 
@@ -106,14 +94,11 @@ async function analyzeAndRefactor(dir) {
     return;
   }
 
-  const prompt =
-    "Can you refactor this Terraform code for readability, performance, and best practices? Respond with only the fixed code.";
-
+  const prompt = "Can you refactor this Terraform code for readability, performance, and best practices? Respond with only the fixed code.";
   let changes = [];
 
   for (let file of files) {
     console.log(chalk.green(`\nRefactoring file: ${file.path}`));
-
     const fileSpinner = ora(`Refactoring ${file.path}`).start();
     const suggestion = await refactorFile(file, prompt);
     fileSpinner.succeed(`Refactor completed for ${file.path}`);
@@ -121,7 +106,6 @@ async function analyzeAndRefactor(dir) {
     const diff = formatDiff(file.content, suggestion.suggestion);
     changes.push({ file, diff, suggestion });
 
-    // Show styled diff
     const boxedDiff = boxen(diff, {
       padding: 1,
       margin: 1,
@@ -133,7 +117,6 @@ async function analyzeAndRefactor(dir) {
 
     console.log(boxedDiff);
 
-    // Ask for confirmation to apply
     const confirm = await prompts({
       type: "select",
       name: "apply",
@@ -153,13 +136,8 @@ async function analyzeAndRefactor(dir) {
     }
   }
 
-  // Generate a report
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const reportPath = path.join(
-    __dirname,
-    "report",
-    `refactor-report-${timestamp}.md`
-  );
+  const reportPath = path.join(__dirname, "report", `refactor-report-${timestamp}.md`);
   let report = `# Terraform Refactor Report (${timestamp})\n\n`;
 
   changes.forEach((change) => {
@@ -168,7 +146,6 @@ async function analyzeAndRefactor(dir) {
   });
 
   const savingSpinner = ora("Saving refactor report...").start();
-
   try {
     await fs.mkdir(path.join(__dirname, "report"), { recursive: true });
     await fs.writeFile(reportPath, report, "utf8");
@@ -179,48 +156,7 @@ async function analyzeAndRefactor(dir) {
   }
 }
 
-// Add to existing imports
-import { exec } from "child_process";
-
-// Option Menu
-async function mainMenu() {
-  const { action } = await prompts({
-    type: "select",
-    name: "action",
-    message: "🛠️ What do you want to do?",
-    choices: [
-      {
-        title: "🗂️ Generate Terraform Folder Structure",
-        value: "generateStructure",
-      },
-      { title: "✨ Optimize Terraform Source Code", value: "optimize" },
-      { title: "🔒 Check for Security Issues", value: "security" },
-      { title: "🚀 Deploy Terraform Resources", value: "deploy" },
-    ],
-  });
-
-  if (!action) return;
-
-  const { dir } = await prompts({
-    type: "text",
-    name: "dir",
-    message: "📁 Enter path to Terraform folder:",
-    initial: "./",
-  });
-
-  switch (action) {
-    case "generateStructure":
-      return generateFolderStructure(dir);
-    case "optimize":
-      return analyzeAndRefactor(dir);
-    case "security":
-      return checkSecurity(dir);
-    case "deploy":
-      return deployTerraform(dir);
-  }
-}
-
-// Generate folder structure best practice
+// Folder structure generation
 async function generateFolderStructure(dir) {
   const structure = [
     "modules/",
@@ -246,7 +182,7 @@ async function generateFolderStructure(dir) {
   console.log(chalk.green("✅ Best practice folder structure generated."));
 }
 
-// Check for security issues (stub using tfsec)
+// Security scan
 async function checkSecurity(dir) {
   const spinner = ora("Checking Terraform code for security issues...").start();
   exec(`tfsec ${dir}`, (err, stdout, stderr) => {
@@ -260,7 +196,7 @@ async function checkSecurity(dir) {
   });
 }
 
-// Deploy Terraform (fmt, validate, plan, apply)
+// Deploy
 async function deployTerraform(dir) {
   const commands = [
     "terraform fmt",
@@ -285,21 +221,48 @@ async function deployTerraform(dir) {
   }
 }
 
-// Replace this:
-(async () => {
-  printGreeting();
-  const response = await prompts({
+// Main Menu
+async function mainMenu() {
+  printGreeting(); // moved greeting here
+  const { action } = await prompts({
+    type: "select",
+    name: "action",
+    message: "🛠️ What do you want to do?",
+    choices: [
+      { title: "🗂️ Generate Terraform Folder Structure", value: "generateStructure" },
+      { title: "✨ Optimize Terraform Source Code", value: "optimize" },
+      { title: "🔒 Check for Security Issues", value: "security" },
+      { title: "🚀 Deploy Terraform Resources", value: "deploy" },
+    ],
+  });
+
+  if (!action) return;
+
+  const { dir } = await prompts({
     type: "text",
     name: "dir",
     message: "📁 Enter path to Terraform folder:",
     initial: "./",
   });
 
-  if (!response.dir) return;
-  await analyzeAndRefactor(response.dir);
-})();
+  if (!dir) {
+    console.log(chalk.red("No directory provided. Exiting."));
+    return;
+  }
 
-// With this:
+  switch (action) {
+    case "generateStructure":
+      return generateFolderStructure(dir);
+    case "optimize":
+      return analyzeAndRefactor(dir);
+    case "security":
+      return checkSecurity(dir);
+    case "deploy":
+      return deployTerraform(dir);
+  }
+}
+
+// Entrypoint
 (async () => {
   await mainMenu();
 })();
