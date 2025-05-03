@@ -23,7 +23,7 @@ function shellEscape(str) {
         .replace(/\n/g, '\\n'); // handle newlines
 }
 
-// Function to ask Amazon service for a refactor suggestion
+// Function to interact with Amazon Q's chat feature
 async function askAmazonQ(prompt, inputCode) {
     await checkQInstalled();
 
@@ -31,9 +31,9 @@ async function askAmazonQ(prompt, inputCode) {
         const fullPrompt = `${prompt}\n\n${inputCode}`;
         const safePrompt = shellEscape(fullPrompt);
 
-        exec(`echo "${safePrompt}" | q ask --language terraform`, (err, stdout, stderr) => {
+        exec(`echo "${safePrompt}" | q chat`, (err, stdout, stderr) => {
             if (err) {
-                console.error(`Error executing q ask: ${stderr}`);
+                console.error(`Error executing q chat: ${stderr}`);
                 reject(new Error(stderr));
             } else {
                 resolve(stdout.trim());
