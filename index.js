@@ -27,17 +27,21 @@ function formatDiff(oldContent, newContent) {
   let j = 0;
 
   while (i < oldLines.length || j < newLines.length) {
-    if (i < oldLines.length && j < newLines.length && oldLines[i] === newLines[j]) {
+    if (
+      i < oldLines.length &&
+      j < newLines.length &&
+      oldLines[i] === newLines[j]
+    ) {
       diffOutput += chalk.gray("  " + oldLines[i]) + "\n";
       i++;
       j++;
     } else {
       if (i < oldLines.length) {
-        diffOutput += chalk.hex("#80EF80")("- " + oldLines[i]) + "\n"; 
+        diffOutput += chalk.hex("#80EF80")("- " + oldLines[i]) + "\n";
         i++;
       }
       if (j < newLines.length) {
-        diffOutput += chalk.hex("#FFD580")("+ " + newLines[j]) + "\n"; 
+        diffOutput += chalk.hex("#FFD580")("+ " + newLines[j]) + "\n";
         j++;
       }
     }
@@ -64,12 +68,22 @@ function printGreeting() {
       chalk.hex("#80EF80")(asciiArt),
       chalk.white.bold(`${username}@${hostname}`),
       "",
-      chalk.hex("#80EF80")("Date: ") + chalk.white(now.toLocaleString("en-GB", { timeZoneName: "short" })) + " ",
-      chalk.hex("#80EF80")("Optime: ") + `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` + " ",
-      chalk.hex("#80EF80")("RAM: ") + `${memUsed.toFixed(0)}MB used / ${memTotal.toFixed(0)}MB total` + " ",
-      chalk.hex("#80EF80")("Working Directory: ") + chalk.white(process.cwd()) + " ",
+      chalk.hex("#80EF80")("Date: ") +
+        chalk.white(now.toLocaleString("en-GB", { timeZoneName: "short" })) +
+        " ",
+      chalk.hex("#80EF80")("Optime: ") +
+        `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` +
+        " ",
+      chalk.hex("#80EF80")("RAM: ") +
+        `${memUsed.toFixed(0)}MB used / ${memTotal.toFixed(0)}MB total` +
+        " ",
+      chalk.hex("#80EF80")("Working Directory: ") +
+        chalk.white(process.cwd()) +
+        " ",
       "",
-      chalk.white("Terraform Assistant helps improve readability, performance & security!"),
+      chalk.white(
+        "Terraform Assistant helps improve readability, performance & security!"
+      ),
     ].join("\n"),
     {
       padding: 1,
@@ -83,17 +97,22 @@ function printGreeting() {
 }
 
 async function analyzeAndRefactor(dir) {
-  console.log(chalk.hex("#80EF80")(`🔍 Analyzing Terraform files in directory: ${dir}`));
+  console.log(
+    chalk.hex("#80EF80")(`🔍 Analyzing Terraform files in directory: ${dir}`)
+  );
   const spinner = ora("Loading files...").start();
   const files = await readTfFiles(dir);
   spinner.succeed("Files loaded successfully");
 
   if (files.length === 0) {
-    console.log(chalk.hex("#80EF80")("⚠️  No Terraform files found in the directory!"));
+    console.log(
+      chalk.hex("#80EF80")("⚠️  No Terraform files found in the directory!")
+    );
     return;
   }
 
-  const prompt = "Can you refactor this Terraform code for readability, performance, and best practices? Respond with only the fixed code.";
+  const prompt =
+    "Can you refactor this Terraform code for readability, performance, and best practices? Respond with only the fixed code.";
   let changes = [];
 
   for (let file of files) {
@@ -136,7 +155,11 @@ async function analyzeAndRefactor(dir) {
   }
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const reportPath = path.join(__dirname, "report", `refactor-report-${timestamp}.md`);
+  const reportPath = path.join(
+    __dirname,
+    "report",
+    `refactor-report-${timestamp}.md`
+  );
   let report = `# Terraform Refactor Report (${timestamp})\n\n`;
 
   changes.forEach((change) => {
@@ -194,6 +217,52 @@ async function checkSecurity(dir) {
 }
 
 async function deployTerraform(dir) {
+  // Check if Terraform is installed
+  const checkTerraform = await new Promise((resolve) => {
+    exec("which terraform", (err, stdout) => {
+      resolve(Boolean(stdout && stdout.trim().length > 0));
+    });
+  });
+
+  if (!checkTerraform) {
+    const { install } = await prompts({
+      type: "confirm",
+      name: "install",
+      message: chalk.hex("#FFD580")(
+        "Terraform is not installed. Do you want to install it?"
+      ),
+      initial: true,
+    });
+
+    if (install) {
+      console.log(chalk.hex("#80EF80")("Opening Terraform install guide..."));
+      // Optional: open browser directly (only works in GUI)
+      exec("xdg-open https://developer.hashicorp.com/terraform/downloads");
+      console.log(
+        chalk.hex("#FFD580")(
+          "Please install Terraform and run the command again."
+        )
+      );
+    } else {
+      console.log(chalk.red("Terraform is required to deploy. Aborting."));
+    }
+    return;
+  }
+
+  const { proceed } = await prompts({
+    type: "confirm",
+    name: "proceed",
+    message: chalk.hex("#80EF80")(
+      "Terraform is installed. Do you want to deploy resources now?"
+    ),
+    initial: true,
+  });
+
+  if (!proceed) {
+    console.log(chalk.gray("Deployment cancelled by user."));
+    return;
+  }
+
   const commands = [
     "terraform fmt",
     "terraform init",
@@ -217,6 +286,65 @@ async function deployTerraform(dir) {
   }
 }
 
+async function destroyTerraform(dir) {
+  const checkTerraform = await new Promise((resolve) => {
+    exec("which terraform", (err, stdout) => {
+      resolve(Boolean(stdout && stdout.trim().length > 0));
+    });
+  });
+
+  if (!checkTerraform) {
+    const { install } = await prompts({
+      type: "confirm",
+      name: "install",
+      message: chalk.hex("#FFD580")(
+        "Terraform is not installed. Do you want to install it?"
+      ),
+      initial: true,
+    });
+
+    if (install) {
+      exec("xdg-open https://developer.hashicorp.com/terraform/downloads");
+      console.log(
+        chalk.hex("#FFD580")(
+          "Please install Terraform and run the command again."
+        )
+      );
+    } else {
+      console.log(chalk.red("Terraform is required to destroy. Aborting."));
+    }
+    return;
+  }
+
+  const { proceed } = await prompts({
+    type: "confirm",
+    name: "proceed",
+    message: chalk.red(
+      "⚠️  Are you sure you want to destroy all Terraform-managed infrastructure in this directory?"
+    ),
+    initial: false,
+  });
+
+  if (!proceed) {
+    console.log(chalk.gray("Destroy operation cancelled by user."));
+    return;
+  }
+
+  const command = "terraform destroy -auto-approve";
+  console.log(chalk.red(`\n▶ ${command}`));
+
+  await new Promise((resolve) => {
+    const proc = exec(command, { cwd: dir }, (err, stdout, stderr) => {
+      if (stdout) console.log(chalk.white(stdout));
+      if (stderr) console.error(chalk.red(stderr));
+      resolve();
+    });
+
+    proc.stdout?.pipe(process.stdout);
+    proc.stderr?.pipe(process.stderr);
+  });
+}
+
 async function mainMenu() {
   printGreeting();
   const { action } = await prompts({
@@ -224,10 +352,17 @@ async function mainMenu() {
     name: "action",
     message: chalk.hex("#80EF80")("What do you want to do?"),
     choices: [
-      { title: chalk.white("✨ Generate Terraform Folder Structure"), value: "generateStructure" },
-      { title: chalk.white("✨ Optimize Terraform Source Code"), value: "optimize" },
+      {
+        title: chalk.white("✨ Generate Terraform Folder Structure"),
+        value: "generateStructure",
+      },
+      {
+        title: chalk.white("✨ Optimize Terraform Source Code"),
+        value: "optimize",
+      },
       { title: chalk.white("✨ Check for Security Issues"), value: "security" },
       { title: chalk.white("✨ Deploy Terraform Resources"), value: "deploy" },
+      { title: chalk.red("✨ Destroy Terraform Resources"), value: "destroy" },
     ],
   });
 
@@ -236,7 +371,7 @@ async function mainMenu() {
   const { dir } = await prompts({
     type: "text",
     name: "dir",
-    message: chalk.hex("#80EF80")("📁 Enter path to Terraform folder:"),
+    message: chalk.hex("#80EF80")("Enter path to Terraform folder:"),
     initial: "./",
   });
 
@@ -254,6 +389,8 @@ async function mainMenu() {
       return checkSecurity(dir);
     case "deploy":
       return deployTerraform(dir);
+    case "destroy":
+      return destroyTerraform(dir);
   }
 }
 
