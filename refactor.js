@@ -19,8 +19,8 @@ function checkQInstalled() {
 // Safely escape input for shell
 function shellEscape(str) {
     return str
-        .replace(/(["$`\\])/g, '\\$1') // escape shell-sensitive characters
-        .replace(/\n/g, '\\n'); // handle newlines
+        .replace(/(["$`\\])/g, '\\$1') 
+        .replace(/\n/g, '\\n');
 }
 
 // Function to interact with Amazon Q's chat feature

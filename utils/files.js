@@ -6,7 +6,6 @@ export async function readTfFiles(dir) {
         const files = [];
         const filePaths = await fs.readdir(dir);
         
-        // Log the directory and files found
         console.log(`Reading Terraform files from directory: ${dir}`);
         console.log(`Files found: ${filePaths}`);
 
@@ -16,7 +15,7 @@ export async function readTfFiles(dir) {
 
             if (stats.isFile() && fullPath.endsWith('.tf')) {
                 const content = await fs.readFile(fullPath, 'utf8');
-                console.log(`Reading file: ${fullPath}`); // Log the file being read
+                console.log(`Reading file: ${fullPath}`);
                 files.push({ path: fullPath, content });
             }
         }

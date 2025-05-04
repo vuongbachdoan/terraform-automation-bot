@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fs from "fs/promises";
 import path from "path";
 import chalk from "chalk";
@@ -31,11 +33,11 @@ function formatDiff(oldContent, newContent) {
       j++;
     } else {
       if (i < oldLines.length) {
-        diffOutput += chalk.hex("#FFA500")("- " + oldLines[i]) + "\n"; // magenta for deletion
+        diffOutput += chalk.hex("#80EF80")("- " + oldLines[i]) + "\n"; 
         i++;
       }
       if (j < newLines.length) {
-        diffOutput += chalk.hex("#FFD580")("+ " + newLines[j]) + "\n"; // lighter magenta for addition
+        diffOutput += chalk.hex("#FFD580")("+ " + newLines[j]) + "\n"; 
         j++;
       }
     }
@@ -59,13 +61,13 @@ function printGreeting() {
 
   const greetingBox = boxen(
     [
-      chalk.hex("#FFA500")(asciiArt),
+      chalk.hex("#80EF80")(asciiArt),
       chalk.white.bold(`${username}@${hostname}`),
       "",
-      chalk.hex("#FFA500")("Date: ") + chalk.white(now.toLocaleString("en-GB", { timeZoneName: "short" })) + " ",
-      chalk.hex("#FFA500")("Optime: ") + `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` + " ",
-      chalk.hex("#FFA500")("RAM: ") + `${memUsed.toFixed(0)}MB used / ${memTotal.toFixed(0)}MB total` + " ",
-      chalk.hex("#FFA500")("Working Directory: ") + chalk.white(process.cwd()) + " ",
+      chalk.hex("#80EF80")("Date: ") + chalk.white(now.toLocaleString("en-GB", { timeZoneName: "short" })) + " ",
+      chalk.hex("#80EF80")("Optime: ") + `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` + " ",
+      chalk.hex("#80EF80")("RAM: ") + `${memUsed.toFixed(0)}MB used / ${memTotal.toFixed(0)}MB total` + " ",
+      chalk.hex("#80EF80")("Working Directory: ") + chalk.white(process.cwd()) + " ",
       "",
       chalk.white("Terraform Assistant helps improve readability, performance & security!"),
     ].join("\n"),
@@ -81,13 +83,13 @@ function printGreeting() {
 }
 
 async function analyzeAndRefactor(dir) {
-  console.log(chalk.hex("#FFA500")(`🔍 Analyzing Terraform files in directory: ${dir}`));
+  console.log(chalk.hex("#80EF80")(`🔍 Analyzing Terraform files in directory: ${dir}`));
   const spinner = ora("Loading files...").start();
   const files = await readTfFiles(dir);
   spinner.succeed("Files loaded successfully");
 
   if (files.length === 0) {
-    console.log(chalk.hex("#FFA500")("⚠️  No Terraform files found in the directory!"));
+    console.log(chalk.hex("#80EF80")("⚠️  No Terraform files found in the directory!"));
     return;
   }
 
@@ -117,7 +119,7 @@ async function analyzeAndRefactor(dir) {
     const confirm = await prompts({
       type: "select",
       name: "apply",
-      message: chalk.hex("#FFA500")("Do you want to apply these changes?"),
+      message: chalk.hex("#80EF80")("Do you want to apply these changes?"),
       choices: [
         { title: chalk.green("✔ Yes, apply"), value: true },
         { title: chalk.red("✖ No, skip"), value: false },
@@ -175,7 +177,7 @@ async function generateFolderStructure(dir) {
     }
   }
 
-  console.log(chalk.hex("#FFA500")("✅ Folder structure generated."));
+  console.log(chalk.hex("#80EF80")("✅ Folder structure generated."));
 }
 
 async function checkSecurity(dir) {
@@ -185,7 +187,7 @@ async function checkSecurity(dir) {
     if (err) {
       console.error(chalk.red("❌ Security scan failed:"), stderr);
     } else {
-      console.log(chalk.hex("#FFA500")("🔒 Security report:\n"));
+      console.log(chalk.hex("#80EF80")("🔒 Security report:\n"));
       console.log(stdout);
     }
   });
@@ -201,7 +203,7 @@ async function deployTerraform(dir) {
   ];
 
   for (const cmd of commands) {
-    console.log(chalk.hex("#FFA500")(`\n▶ ${cmd}`));
+    console.log(chalk.hex("#80EF80")(`\n▶ ${cmd}`));
     await new Promise((resolve) => {
       const proc = exec(cmd, { cwd: dir }, (err, stdout, stderr) => {
         if (stdout) console.log(chalk.white(stdout));
@@ -220,7 +222,7 @@ async function mainMenu() {
   const { action } = await prompts({
     type: "select",
     name: "action",
-    message: chalk.hex("#FFA500")("What do you want to do?"),
+    message: chalk.hex("#80EF80")("What do you want to do?"),
     choices: [
       { title: chalk.white("✨ Generate Terraform Folder Structure"), value: "generateStructure" },
       { title: chalk.white("✨ Optimize Terraform Source Code"), value: "optimize" },
@@ -234,7 +236,7 @@ async function mainMenu() {
   const { dir } = await prompts({
     type: "text",
     name: "dir",
-    message: chalk.hex("#FFA500")("📁 Enter path to Terraform folder:"),
+    message: chalk.hex("#80EF80")("📁 Enter path to Terraform folder:"),
     initial: "./",
   });
 
