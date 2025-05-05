@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // #!/usr/bin/env node
 
 // import fs from "fs/promises";
@@ -687,7 +689,7 @@
 // })();
 
 
-#!/usr/bin/env node
+
 
 import fs from "fs/promises";
 import path from "path";
