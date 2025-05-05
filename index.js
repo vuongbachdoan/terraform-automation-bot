@@ -9,6 +9,7 @@ import { readTfFiles } from "./utils/files.js";
 import { refactorFile } from "./refactor.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { exec } from "child_process";
 import figlet from "figlet";
 import boxen from "boxen";
 import os from "os";
@@ -101,9 +102,7 @@ function printGreeting() {
       `${chalk.hex("#80EF80")(`RAM:`)} ${memUsed.toFixed(
         0
       )}MB used / ${memTotal.toFixed(0)}MB total`,
-      `${chalk.hex("#80EF80")(`Directory:`)} ${chalk.white(
-        process.cwd()
-      )}`,
+      `${chalk.hex("#80EF80")(`Directory:`)} ${chalk.white(process.cwd())}`,
       "",
       chalk.white(
         `Terraform Assistant helps improve readability, performance & security!`
