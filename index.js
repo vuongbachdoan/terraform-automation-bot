@@ -12,10 +12,34 @@ import { dirname } from "path";
 import figlet from "figlet";
 import boxen from "boxen";
 import os from "os";
-import { exec } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Set OS-based icons
+const platform = os.platform();
+const isWindows = platform === "win32";
+
+const icons = {
+  analyze: isWindows ? "🔍" : "🔍",
+  success: isWindows ? "✔" : "✅",
+  skip: isWindows ? "⏭" : "⏭️",
+  warn: isWindows ? "!" : "⚠️",
+  refactor: isWindows ? "*" : "✨",
+  save: isWindows ? "💾" : "💾",
+  rocket: isWindows ? ">" : "🚀",
+  clock: isWindows ? "o" : "🕒",
+  memory: isWindows ? "M" : "🧠",
+  directory: isWindows ? "D" : "📁",
+  question: isWindows ? "?" : "❓",
+  yes: isWindows ? "[Y]" : "✔",
+  no: isWindows ? "[N]" : "✖",
+  "3tier": isWindows ? "[*]" : "🧱",
+  s3website: isWindows ? "[*]" : "🌐",
+  rds: isWindows ? "[*]" : "🗄️",
+  vpc: isWindows ? "[*]" : "🌐",
+  default: isWindows ? "[*]" : "📦",
+};
 
 // Format changes with magenta as main color
 function formatDiff(oldContent, newContent) {
@@ -68,21 +92,21 @@ function printGreeting() {
       chalk.hex("#80EF80")(asciiArt),
       chalk.white.bold(`${username}@${hostname}`),
       "",
-      chalk.hex("#80EF80")("Date: ") +
-        chalk.white(now.toLocaleString("en-GB", { timeZoneName: "short" })) +
-        " ",
-      chalk.hex("#80EF80")("Optime: ") +
-        `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` +
-        " ",
-      chalk.hex("#80EF80")("RAM: ") +
-        `${memUsed.toFixed(0)}MB used / ${memTotal.toFixed(0)}MB total` +
-        " ",
-      chalk.hex("#80EF80")("Working Directory: ") +
-        chalk.white(process.cwd()) +
-        " ",
+      `${chalk.hex("#80EF80")("Date:")} ${chalk.white(
+        now.toLocaleString("en-GB", { timeZoneName: "short" })
+      )}`,
+      `${chalk.hex("#80EF80")(`${icons.clock} Uptime:`)} ${Math.floor(
+        uptime / 3600
+      )}h ${Math.floor((uptime % 3600) / 60)}m`,
+      `${chalk.hex("#80EF80")(`${icons.memory} RAM:`)} ${memUsed.toFixed(
+        0
+      )}MB used / ${memTotal.toFixed(0)}MB total`,
+      `${chalk.hex("#80EF80")(`${icons.directory} Directory:`)} ${chalk.white(
+        process.cwd()
+      )}`,
       "",
       chalk.white(
-        "Terraform Assistant helps improve readability, performance & security!"
+        `${icons.rocket} Terraform Assistant helps improve readability, performance & security!`
       ),
     ].join("\n"),
     {
@@ -98,15 +122,19 @@ function printGreeting() {
 
 async function analyzeAndRefactor(dir) {
   console.log(
-    chalk.hex("#80EF80")(`🔍 Analyzing Terraform files in directory: ${dir}`)
+    chalk.hex("#80EF80")(
+      `${icons.analyze} Analyzing Terraform files in directory: ${dir}`
+    )
   );
   const spinner = ora("Loading files...").start();
   const files = await readTfFiles(dir);
-  spinner.succeed("Files loaded successfully");
+  spinner.succeed(`${icons.success} Files loaded successfully`);
 
   if (files.length === 0) {
     console.log(
-      chalk.hex("#80EF80")("⚠️  No Terraform files found in the directory!")
+      chalk.hex("#FFD700")(
+        `${icons.warn} No Terraform files found in the directory!`
+      )
     );
     return;
   }
@@ -116,10 +144,12 @@ async function analyzeAndRefactor(dir) {
   let changes = [];
 
   for (let file of files) {
-    console.log(chalk.white.bold(`\n✨ Refactoring file: ${file.path}`));
+    console.log(
+      chalk.white.bold(`\n${icons.refactor} Refactoring file: ${file.path}`)
+    );
     const fileSpinner = ora(`Refactoring ${file.path}`).start();
     const suggestion = await refactorFile(file, prompt);
-    fileSpinner.succeed(`Refactor completed for ${file.path}`);
+    fileSpinner.succeed(`${icons.success} Refactor completed for ${file.path}`);
 
     const diff = formatDiff(file.content, suggestion.suggestion);
     changes.push({ file, diff, suggestion });
@@ -138,19 +168,23 @@ async function analyzeAndRefactor(dir) {
     const confirm = await prompts({
       type: "select",
       name: "apply",
-      message: chalk.hex("#80EF80")("Do you want to apply these changes?"),
+      message: chalk.hex("#80EF80")(
+        `${icons.question} Do you want to apply these changes?`
+      ),
       choices: [
-        { title: chalk.green("✔ Yes, apply"), value: true },
-        { title: chalk.red("✖ No, skip"), value: false },
+        { title: chalk.green(`${icons.yes} Yes, apply`), value: true },
+        { title: chalk.red(`${icons.no} No, skip`), value: false },
       ],
       initial: 0,
     });
 
     if (confirm.apply) {
       file.content = suggestion.suggestion;
-      console.log(chalk.green(`✔ Changes applied for ${file.path}`));
+      console.log(
+        chalk.green(`${icons.success} Changes applied for ${file.path}`)
+      );
     } else {
-      console.log(chalk.gray(`⏭️ Skipped ${file.path}`));
+      console.log(chalk.gray(`${icons.skip} Skipped ${file.path}`));
     }
   }
 
@@ -167,40 +201,293 @@ async function analyzeAndRefactor(dir) {
     report += change.diff + "\n\n";
   });
 
-  const savingSpinner = ora("Saving refactor report...").start();
+  const savingSpinner = ora(`${icons.save} Saving refactor report...`).start();
   try {
     await fs.mkdir(path.join(__dirname, "report"), { recursive: true });
     await fs.writeFile(reportPath, report, "utf8");
-    savingSpinner.succeed(`📄 Refactor report saved to ${reportPath}`);
+    savingSpinner.succeed(
+      `${icons.success} Refactor report saved to ${reportPath}`
+    );
   } catch (error) {
-    savingSpinner.fail("Error saving the refactor report");
+    savingSpinner.fail(`${icons.warn} Error saving the refactor report`);
     console.error(chalk.red("Error saving the refactor report:", error));
   }
 }
 
 async function generateFolderStructure(dir) {
-  const structure = [
-    "modules/",
-    "environments/dev/",
-    "environments/prod/",
-    "scripts/",
-    "main.tf",
-    "variables.tf",
-    "outputs.tf",
-    "backend.tf",
-    "provider.tf",
-  ];
+  const { projectType } = await prompts({
+    type: "select",
+    name: "projectType",
+    message: chalk.hex("#80EF80")("How do you want to start your project?"),
+    choices: [
+      { title: "Build from scratch", value: "scratch" },
+      { title: "Use a template", value: "template" },
+    ],
+    initial: 0,
+  });
+
+  const templateContents = {
+    // Root Terraform files
+    "main.tf": `terraform {
+      required_providers {
+        aws = {
+          source  = "hashicorp/aws"
+          version = "~> 5.0"
+        }
+      }
+    }
+    
+    provider "aws" {
+      region = var.region
+    }`,
+    "variables.tf": `variable "region" {
+      description = "AWS region"
+      type        = string
+      default     = "us-east-1"
+    }`,
+    "outputs.tf": `output "region" {
+      description = "The AWS region in use"
+      value       = var.region
+    }`,
+    "provider.tf": `provider "aws" {
+      region = var.region
+    }`,
+    "backend.tf": `terraform {
+      backend "s3" {
+        bucket = "my-terraform-state"
+        key    = "global/s3/terraform.tfstate"
+        region = "us-east-1"
+      }
+    }`,
+
+    // 🟢 VPC Module
+    "modules/vpc/main.tf": `resource "aws_vpc" "main" {
+      cidr_block = "10.0.0.0/16"
+      enable_dns_support = true
+      enable_dns_hostnames = true
+    
+      tags = {
+        Name = "main-vpc"
+      }
+    }`,
+
+    // 🟢 Compute Module
+    "modules/compute/main.tf": `resource "aws_instance" "web" {
+      ami           = "ami-0c55b159cbfafe1f0" # Update for your region
+      instance_type = "t2.micro"
+      subnet_id     = "subnet-12345678"       # Replace with actual subnet ID
+    
+      tags = {
+        Name = "web-instance"
+      }
+    }`,
+
+    // 🟢 Database Module
+    "modules/database/main.tf": `resource "aws_db_instance" "default" {
+      allocated_storage    = 20
+      engine               = "mysql"
+      engine_version       = "8.0"
+      instance_class       = "db.t3.micro"
+      name                 = "mydb"
+      username             = "admin"
+      password             = "changeme123"
+      parameter_group_name = "default.mysql8.0"
+      skip_final_snapshot  = true
+    
+      tags = {
+        Name = "mysql-database"
+      }
+    }`,
+
+    // 🔵 Environment Dev/Test/Prod main.tf
+    "environments/dev/main.tf": `module "vpc" {
+      source = "../../modules/vpc"
+    }
+    
+    module "compute" {
+      source = "../../modules/compute"
+    }
+    
+    module "database" {
+      source = "../../modules/database"
+    }
+    
+    output "environment" {
+      value = "dev"
+    }
+    `,
+    "environments/test/main.tf": `module "vpc" {
+      source = "../../modules/vpc"
+    }
+    
+    module "compute" {
+      source = "../../modules/compute"
+    }
+    
+    module "database" {
+      source = "../../modules/database"
+    }
+    
+    output "environment" {
+      value = "test"
+    }
+    `,
+    "environments/prod/main.tf": `module "vpc" {
+      source = "../../modules/vpc"
+    }
+    
+    module "compute" {
+      source = "../../modules/compute"
+    }
+    
+    module "database" {
+      source = "../../modules/database"
+    }
+    
+    output "environment" {
+      value = "prod"
+    }
+  `,
+  };
+
+  const getTemplateStructure = (template) => {
+    switch (template) {
+      case "3tier":
+        return [
+          "modules/vpc/",
+          "modules/compute/",
+          "modules/database/",
+          "environments/dev/",
+          "environments/test/",
+          "environments/prod/",
+          "environments/dev/main.tf",
+          "environments/test/main.tf",
+          "environments/prod/main.tf",
+          "main.tf",
+          "variables.tf",
+          "outputs.tf",
+          "backend.tf",
+          "provider.tf",
+        ];
+      case "s3website":
+        return [
+          "modules/s3/",
+          "main.tf",
+          "variables.tf",
+          "outputs.tf",
+          "backend.tf",
+          "provider.tf",
+        ];
+      case "rds":
+        return [
+          "modules/rds/",
+          "main.tf",
+          "variables.tf",
+          "outputs.tf",
+          "backend.tf",
+          "provider.tf",
+        ];
+      case "vpc":
+        return [
+          "modules/vpc/",
+          "main.tf",
+          "variables.tf",
+          "outputs.tf",
+          "backend.tf",
+          "provider.tf",
+        ];
+      default:
+        return [
+          "modules/",
+          "scripts/",
+          "environments/dev/",
+          "environments/test/",
+          "environments/prod/",
+          "main.tf",
+          "variables.tf",
+          "outputs.tf",
+          "provider.tf",
+          "backend.tf",
+        ];
+    }
+  };
+
+  let structure = [];
+
+  if (projectType === "scratch") {
+    const { layout } = await prompts({
+      type: "select",
+      name: "layout",
+      message: chalk.hex("#FFD580")("Choose folder layout"),
+      choices: [
+        { title: "📁 Flat source", value: "flat" },
+        { title: "🌍 Multi-environment (recommended)", value: "multi" },
+      ],
+      initial: 1,
+    });
+
+    structure =
+      layout === "flat"
+        ? [
+            "main.tf",
+            "variables.tf",
+            "outputs.tf",
+            "provider.tf",
+            "backend.tf",
+            "modules/",
+            "scripts/",
+          ]
+        : [
+            "modules/",
+            "scripts/",
+            "environments/dev/",
+            "environments/test/",
+            "environments/prod/",
+            "main.tf",
+            "variables.tf",
+            "outputs.tf",
+            "provider.tf",
+            "backend.tf",
+          ];
+  } else {
+    const { templateChoice } = await prompts({
+      type: "select",
+      name: "templateChoice",
+      message: chalk.hex("#80EF80")("Choose a template:"),
+      choices: [
+        {
+          title: `${icons["3tier"]} 3-tier AWS architecture`,
+          value: "3tier",
+        },
+        {
+          title: `${icons["s3website"]} Static website with S3`,
+          value: "s3website",
+        },
+        { title: `${icons["rds"]} RDS MySQL only`, value: "rds" },
+        { title: `${icons["vpc"]} Single VPC only`, value: "vpc" },
+        {
+          title: `${icons["default"]} Default template`,
+          value: "default",
+        },
+      ],
+      initial: 0,
+    });
+
+    structure = getTemplateStructure(templateChoice);
+  }
 
   for (const item of structure) {
     const fullPath = path.join(dir, item);
     if (item.endsWith("/")) {
       await fs.mkdir(fullPath, { recursive: true });
     } else {
-      await fs.writeFile(fullPath, "", "utf8");
+      const content = templateContents[item] || "";
+      await fs.mkdir(path.dirname(fullPath), { recursive: true });
+      await fs.writeFile(fullPath, content, "utf8");
     }
   }
 
-  console.log(chalk.hex("#80EF80")("✅ Folder structure generated."));
+  console.log(chalk.green("✅ Project structure created at:"), dir);
 }
 
 async function checkSecurity(dir) {
@@ -210,7 +497,7 @@ async function checkSecurity(dir) {
     if (err) {
       console.error(chalk.red("❌ Security scan failed:"), stderr);
     } else {
-      console.log(chalk.hex("#80EF80")("🔒 Security report:\n"));
+      console.log(chalk.hex("#80EF80")(" Security report:\n"));
       console.log(stdout);
     }
   });
