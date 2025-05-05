@@ -1,5 +1,4 @@
 import { exec } from 'child_process';
-import fs from 'fs/promises';
 import { platform } from 'os';
 
 // Check if `q` CLI is installed
@@ -21,13 +20,12 @@ function checkQInstalled() {
 }
 
 // Function to interact with Amazon Q's chat feature
-async function askAmazonQ(prompt: string, inputCode: string): Promise<string> {
+async function askAmazonQ(prompt, inputCode) {
     await checkQInstalled();
 
     return new Promise((resolve, reject) => {
         const fullPrompt = `${prompt}\n\n${inputCode}`;
 
-        // Execute with --trust-all-tools to bypass interactive approval
         const child = exec('q chat --trust-all-tools', { timeout: 30000 }, (err, stdout, stderr) => {
             if (err) {
                 console.error(`Error executing q chat: ${stderr || err.message}`);
@@ -37,14 +35,14 @@ async function askAmazonQ(prompt: string, inputCode: string): Promise<string> {
             }
         });
 
-        // Send prompt via stdin
+        // Write to stdin
         child.stdin.write(fullPrompt);
         child.stdin.end();
     });
 }
 
 // Refactor file based on the given prompt and return the refactored suggestion
-async function refactorFile(file: { path: string; content: string }, prompt: string) {
+async function refactorFile(file, prompt) {
     try {
         if (!file || !file.content) {
             throw new Error('File content is undefined or invalid');
@@ -59,7 +57,7 @@ async function refactorFile(file: { path: string; content: string }, prompt: str
             ...file,
             suggestion,
         };
-    } catch (error: any) {
+    } catch (error) {
         console.error(`Error refactoring file ${file.path}: ${error.message}`);
         return {
             ...file,
