@@ -28,6 +28,7 @@ q login
 Setup global command
 ```bash
 chmod +x index.js
+sudo rm /usr/local/bin/ta
 sudo ln -s $(realpath index.js) /usr/local/bin/ta
 ta
 ```

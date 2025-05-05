@@ -95,18 +95,18 @@ function printGreeting() {
       `${chalk.hex("#80EF80")("Date:")} ${chalk.white(
         now.toLocaleString("en-GB", { timeZoneName: "short" })
       )}`,
-      `${chalk.hex("#80EF80")(`${icons.clock} Uptime:`)} ${Math.floor(
+      `${chalk.hex("#80EF80")(`Uptime:`)} ${Math.floor(
         uptime / 3600
       )}h ${Math.floor((uptime % 3600) / 60)}m`,
-      `${chalk.hex("#80EF80")(`${icons.memory} RAM:`)} ${memUsed.toFixed(
+      `${chalk.hex("#80EF80")(`RAM:`)} ${memUsed.toFixed(
         0
       )}MB used / ${memTotal.toFixed(0)}MB total`,
-      `${chalk.hex("#80EF80")(`${icons.directory} Directory:`)} ${chalk.white(
+      `${chalk.hex("#80EF80")(`Directory:`)} ${chalk.white(
         process.cwd()
       )}`,
       "",
       chalk.white(
-        `${icons.rocket} Terraform Assistant helps improve readability, performance & security!`
+        `Terraform Assistant helps improve readability, performance & security!`
       ),
     ].join("\n"),
     {
