@@ -23,7 +23,7 @@ async function askAmazonQ(prompt, inputCode) {
     return new Promise((resolve, reject) => {
         const fullPrompt = `${prompt}\n\n${inputCode}`;
 
-        const child = exec('q chat', { timeout: 30000 }, (err, stdout, stderr) => {
+        const child = exec('q chat --trust-all-tools', { timeout: 30000 }, (err, stdout, stderr) => {
             if (err) {
                 console.error(`Error executing q chat: ${stderr || err.message}`);
                 reject(new Error(`Failed to run 'q chat': ${stderr || err.message}`));
@@ -32,7 +32,6 @@ async function askAmazonQ(prompt, inputCode) {
             }
         });
 
-        // Safely write prompt to stdin
         child.stdin.write(fullPrompt);
         child.stdin.end();
     });
