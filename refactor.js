@@ -16,37 +16,37 @@ function checkQInstalled() {
     });
 }
 
-// Safely escape input for shell
-function shellEscape(str) {
-    return str
-        .replace(/(["$`\\])/g, '\\$1') 
-        .replace(/\n/g, '\\n');
-}
-
 // Function to interact with Amazon Q's chat feature
 async function askAmazonQ(prompt, inputCode) {
     await checkQInstalled();
 
     return new Promise((resolve, reject) => {
         const fullPrompt = `${prompt}\n\n${inputCode}`;
-        const safePrompt = shellEscape(fullPrompt);
 
-        exec(`echo "${safePrompt}" | q chat`, (err, stdout, stderr) => {
+        const child = exec('q chat', { timeout: 30000 }, (err, stdout, stderr) => {
             if (err) {
-                console.error(`Error executing q chat: ${stderr}`);
-                reject(new Error(stderr));
+                console.error(`Error executing q chat: ${stderr || err.message}`);
+                reject(new Error(`Failed to run 'q chat': ${stderr || err.message}`));
             } else {
                 resolve(stdout.trim());
             }
         });
+
+        // Safely write prompt to stdin
+        child.stdin.write(fullPrompt);
+        child.stdin.end();
     });
 }
 
 // Refactor file based on the given prompt and return the refactored suggestion
 async function refactorFile(file, prompt) {
     try {
-        if (!file || !file.content) {
-            throw new Error('File content is undefined or invalid');
+        if (
+            !file ||
+            typeof file.content !== 'string' ||
+            typeof file.path !== 'string'
+        ) {
+            throw new Error('Invalid file structure: path and content must be defined.');
         }
 
         console.log(`Refactoring file: ${file.path}`);
@@ -56,13 +56,13 @@ async function refactorFile(file, prompt) {
 
         return {
             ...file,
-            suggestion
+            suggestion,
         };
     } catch (error) {
-        console.error(`Error refactoring file ${file.path}: ${error.message}`);
+        console.error(`Error refactoring file ${file?.path || 'unknown'}: ${error.message}`);
         return {
             ...file,
-            suggestion: `Error during refactoring: ${error.message}`
+            suggestion: `Error during refactoring: ${error.message}`,
         };
     }
 }
