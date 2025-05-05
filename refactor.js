@@ -48,7 +48,7 @@ async function refactorFile(file, prompt) {
             throw new Error('File content is undefined or invalid');
         }
 
-        console.log(`Refactoring file: ${file.path}`);
+        console.log(`\nRefactoring file: ${file.path}`);
         const suggestion = await askAmazonQ(prompt, file.content);
 
         console.log(`Refactored suggestion for ${file.path}: ${suggestion}`);
