@@ -180,6 +180,7 @@ async function analyzeAndRefactor(dir) {
 
     if (confirm.apply) {
       file.content = suggestion.suggestion;
+      await fs.writeFile(file.path, suggestion.suggestion, "utf8");
       console.log(
         chalk.green(`${icons.success} Changes applied for ${file.path}`)
       );
