@@ -8,7 +8,11 @@ function checkQInstalled() {
     return new Promise((resolve, reject) => {
         exec(checkCommand, (err, stdout) => {
             if (err || !stdout.trim()) {
-                reject(new Error(`Amazon Q CLI ('q') is not installed or not in PATH. Install it from https://docs.aws.amazon.com/q/developer/latest/userguide/install-cli.html`));
+                reject(
+                    new Error(
+                        `Amazon Q CLI ('q') is not installed or not in PATH. Install it from https://docs.aws.amazon.com/q/developer/latest/userguide/install-cli.html`
+                    )
+                );
             } else {
                 resolve(true);
             }
@@ -17,12 +21,13 @@ function checkQInstalled() {
 }
 
 // Function to interact with Amazon Q's chat feature
-async function askAmazonQ(prompt, inputCode) {
+async function askAmazonQ(prompt: string, inputCode: string): Promise<string> {
     await checkQInstalled();
 
     return new Promise((resolve, reject) => {
         const fullPrompt = `${prompt}\n\n${inputCode}`;
 
+        // Execute with --trust-all-tools to bypass interactive approval
         const child = exec('q chat --trust-all-tools', { timeout: 30000 }, (err, stdout, stderr) => {
             if (err) {
                 console.error(`Error executing q chat: ${stderr || err.message}`);
@@ -32,20 +37,17 @@ async function askAmazonQ(prompt, inputCode) {
             }
         });
 
+        // Send prompt via stdin
         child.stdin.write(fullPrompt);
         child.stdin.end();
     });
 }
 
 // Refactor file based on the given prompt and return the refactored suggestion
-async function refactorFile(file, prompt) {
+async function refactorFile(file: { path: string; content: string }, prompt: string) {
     try {
-        if (
-            !file ||
-            typeof file.content !== 'string' ||
-            typeof file.path !== 'string'
-        ) {
-            throw new Error('Invalid file structure: path and content must be defined.');
+        if (!file || !file.content) {
+            throw new Error('File content is undefined or invalid');
         }
 
         console.log(`Refactoring file: ${file.path}`);
@@ -57,8 +59,8 @@ async function refactorFile(file, prompt) {
             ...file,
             suggestion,
         };
-    } catch (error) {
-        console.error(`Error refactoring file ${file?.path || 'unknown'}: ${error.message}`);
+    } catch (error: any) {
+        console.error(`Error refactoring file ${file.path}: ${error.message}`);
         return {
             ...file,
             suggestion: `Error during refactoring: ${error.message}`,
